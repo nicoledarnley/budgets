@@ -31,7 +31,7 @@ order by 1"
 
 dbDisconnect(con)
 
-###### Linear Regression
+###### Linear Regression - Ultimately used trials instead of the log but keeping the code
 # Remove first row
 head(df)
 df <-tail(df,-1)
@@ -86,7 +86,7 @@ colnames(trial_estimates)<-c('trials')
 predict(fit, data.frame(trial_estimates))
 
 
-###Polynomial Regression
+###Polynomial Regression - This didnt work, but keeping the code
 
 #ggplot(df, aes(trials, cvr) ) +
 #  geom_point() +
