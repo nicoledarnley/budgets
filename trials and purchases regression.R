@@ -2,8 +2,9 @@ library(RODBC)
 library(RJDBC)
 library(RPostgreSQL)
 library(ggplot2)
-library(tidyr)
-library(GGally)
+library(caret)
+library(caTools)
+
 
 dbname="dev"  
 host='redshift.lampogroup.net'  
@@ -31,12 +32,18 @@ order by 1"
 
 dbDisconnect(con)
 
-###### Linear Regression - Ultimately used trials instead of the log but keeping the code
+################################################### Linear Regression
 # Remove first row
 head(df)
 df <-tail(df,-1)
 colnames(df)[2] <-"trials"
 
+#Break data into a testing and training set
+
+set.seed(123)   
+sample = sample.split(df,SplitRatio = 0.8)
+train =subset(df,sample ==TRUE) 
+test=subset(df, sample==FALSE)
 
 #add columns
 #df$cvr <- df$purchases/df$trials
@@ -44,7 +51,7 @@ colnames(df)[2] <-"trials"
 #df$id <- seq.int(nrow(df))
 
 
-ggplot(data = df, aes(x = trials, y = purchases)) +
+ggplot(data = test, aes(x = trials, y = purchases)) +
   geom_point() +
   stat_smooth(method = lm)
 
@@ -52,9 +59,19 @@ ggplot(data = df, aes(x = trials, y = purchases)) +
 #df <- df[!df$trials>2000,]
 
 #linear model
-fit <- lm(purchases ~ trials, data = df)
+fit <- lm(purchases ~ trials, data = train)
 summary(fit)
 histogram(fit$residuals)
+
+predictions <- predict(fit, data.frame(test))
+
+# Model performance
+data.frame(
+  RMSE = RMSE(predictions, test$purchases),
+  R2 = R2(predictions, test$purchases)
+)
+
+
 
 #Trial Volume Estimates
 trial_estimates <- rbind(1269,
@@ -86,7 +103,7 @@ colnames(trial_estimates)<-c('trials')
 predict(fit, data.frame(trial_estimates))
 
 
-###Polynomial Regression - This didnt work, but keeping the code
+###Polynomial Regression
 
 #ggplot(df, aes(trials, cvr) ) +
 #  geom_point() +
@@ -99,7 +116,7 @@ predict(fit, data.frame(trial_estimates))
 #predict(fit2, data.frame(trial_estimates))
 
 
-#rm(list = ls())
+rm(list = ls())
 
 
 
